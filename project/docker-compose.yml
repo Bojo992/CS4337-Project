@@ -1,0 +1,13 @@
+name: cs4337-chatforstudents
+
+services:
+  chat:
+      image: cs4337-chatservice
+      container_name: chat
+      networks:
+        - net
+      ports:
+        - "8080:8080"
+networks:
+  net:
+    driver: bridge
