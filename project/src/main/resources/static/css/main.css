@@ -199,6 +199,11 @@ button.accent {
 #chat-page .chat-message span {
     color: #333;
     font-weight: 600;
+    .timestamp {
+          color: #555
+          font-weight: 300;
+          font-size: 12px;
+      }
 }
 
 #chat-page .chat-message p {
@@ -282,4 +287,6 @@ button.accent {
     .chat-header h2 {
         font-size: 1.1em;
     }
+
+
 }

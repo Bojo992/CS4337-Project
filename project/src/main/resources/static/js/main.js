@@ -39,7 +39,7 @@ function onConnected() {
     // Tell your username to the server
     stompClient.send("/app/chat.addUser",
         {},
-        JSON.stringify({sender: username, type: 'JOIN'})
+        JSON.stringify({sender: username, type: 'CONNECT'})
     )
 
     connectingElement.classList.add('hidden');
@@ -92,12 +92,13 @@ function onMessageReceived(payload) {
         var usernameText = document.createTextNode(message.sender);
         usernameElement.appendChild(usernameText);
         messageElement.appendChild(usernameElement);
+        messageElement.appendChild(document.createElement('br'));
+        var sentAtElement = document.createElement('span');
+        sentAtElement.classList.add("timestamp")
+        var sentAtText = document.createTextNode(message.sentAt);
+        sentAtElement.appendChild(sentAtText);
+        messageElement.appendChild(sentAtElement);
     }
-    messageElement.appendChild(document.createElement('br'));
-    var sentAtElement = document.createElement('span');
-    var sentAtText = document.createTextNode(message.sentAt);
-    sentAtElement.appendChild(sentAtText);
-    messageElement.appendChild(sentAtElement);
     var textElement = document.createElement('p');
     var messageText = document.createTextNode(message.content);
     textElement.appendChild(messageText);
