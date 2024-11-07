@@ -1,7 +1,7 @@
 package com.example.demo;
 
-import org.springframework.beans.factoy.annotation.Value;
-import org.springframework.sterotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 
 @Service
@@ -11,7 +11,7 @@ public class OAuthService {
     @Value("${oauth.client.secret}")
     private String clientSecret;
     @Value("${oauth.access.token.url}")
-    private string accessToken;
+    private String accessToken;
     @Value("${oauth.client.auth.url}")
     private String clientAuthURL;
 

@@ -7,9 +7,13 @@ plugins {
 group = 'com.cs4337'
 version = '0.0.1-SNAPSHOT'
 
+bootJar {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(23)
+		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
 
