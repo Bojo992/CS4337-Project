@@ -18,15 +18,36 @@ var colors = [
 
 function connect(event) {
     username = document.querySelector('#name').value.trim();
+    pass = document.querySelector('#pass').value.trim();
 
     if(username) {
-        usernamePage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
+       fetch('http://localhost:8081'+'/login', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json'
+                   },
+                   body: JSON.stringify({ username: username, password: pass })
+               })
+               .then(response => {
+                   if (response.ok) {
+                       return response.json();
+                   } else {
+                       throw new Error('Login failed');
+                   }
+               })
+               .then(data => {
+                   // If login is successful, proceed to connect to WebSocket
+                   usernamePage.classList.add('hidden');
+                   chatPage.classList.remove('hidden');
 
-        var socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
+                   const socket = new SockJS('/ws');
+                   stompClient = Stomp.over(socket);
 
-        stompClient.connect({}, onConnected, onError);
+                   stompClient.connect({}, onConnected, onError);
+               })
+               .catch(error => {
+                   console.error('Error during login:', error);
+               });
     }
     event.preventDefault();
 }
