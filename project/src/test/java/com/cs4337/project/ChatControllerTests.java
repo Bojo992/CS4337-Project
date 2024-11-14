@@ -1,23 +1,34 @@
 package com.cs4337.project;
 
 import com.cs4337.project.model.ChatMessage;
+import com.cs4337.project.model.MessageType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
-import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
+
+import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ChatControllerTests {
 
-    WebSocketStompClient stompClient;
+    private static final Logger LOGGER = Logger.getLogger(ChatControllerTests.class.getName());
+    private final WebSocketStompClient stompClient;
+    private final BlockingQueue<ChatMessage> messageQueue = new LinkedBlockingQueue<>();
 
     public ChatControllerTests() {
         stompClient = new WebSocketStompClient(
@@ -26,11 +37,10 @@ public class ChatControllerTests {
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
     }
 
-    public void testChat() throws ExecutionException, InterruptedException {
-        String url = "ws://localhost:8080/ws"; // Replace with actual endpoint path
+    @Test
+    public void testChat() throws Exception {
+        String url = "ws://localhost:8080/ws"; // Adjust the URL to match your WebSocket endpoint
         StompSession session = stompClient.connectAsync(url, new StompSessionHandlerAdapter() {}).get();
-
-        BlockingQueue<ChatMessage> messageQueue = new LinkedBlockingQueue<>();
 
         // Subscribe to a topic and add messages to the queue when received
         session.subscribe("/topic/public", new StompFrameHandler() {
@@ -41,17 +51,52 @@ public class ChatControllerTests {
 
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
-                messageQueue.add((ChatMessage) payload);
+                ChatMessage receivedMessage = (ChatMessage) payload;
+                System.out.println("Received message: " + receivedMessage);  // Log received message
+                messageQueue.add(receivedMessage);
             }
         });
 
-        // Test logic (optional)
-        // Send test messages or perform actions that trigger WebSocket communication
-        // Example:
-        // sendTestMessage(session);
+        // Run WebSocket communication test
+        testWebSocketCommunication(session);
+    }
 
-        // Optionally, wait for messages and assert or process
-        // ChatMessage message = messageQueue.take(); // blocks until message is received
-        // Assert some condition on message or verify behavior
+    private void testWebSocketCommunication(StompSession session) throws Exception {
+        sendTestMessage(session);
+
+        // Retrieve the message from the queue
+        ChatMessage receivedMessage = messageQueue.poll(5, TimeUnit.SECONDS); // Poll for 5 seconds
+        if (receivedMessage == null) {
+            LOGGER.warning("No message received within the timeout period.");
+        } else {
+            LOGGER.info("Received message content: " + receivedMessage.getContent());
+        }
+
+        // Assertions to verify message content
+        Assertions.assertNotNull(receivedMessage, "Expected to receive a message within the timeout period.");
+        Assertions.assertEquals("Test message", receivedMessage.getContent(),
+                "Message content verification failed. Actual content: " + receivedMessage.getContent());
+
+        // Ensure other fields are correct
+        Assertions.assertEquals("testUser", receivedMessage.getSender(), "Sender verification failed.");
+        Assertions.assertEquals(MessageType.CHAT, receivedMessage.getType(), "Message type verification failed.");
+        Assertions.assertNotNull(receivedMessage.getSentAt(), "Sent time should not be null.");
+        Assertions.assertFalse(receivedMessage.isSeen(), "Message should not be seen yet.");
+        Assertions.assertNull(receivedMessage.getMedia(), "Media should be null.");
+    }
+
+    private void sendTestMessage(StompSession session) {
+        String sender = "testUser";
+        ChatMessage testMessage = new ChatMessage(
+                "Test message",           // content
+                sender,               // sender
+                MessageType.CHAT,         // type
+                LocalDateTime.now(),      // sentAt
+                null,                     // media (null if not needed)
+                false                     // isSeen (false when first sent)
+        );
+
+        session.send("/app/chat.sendMsg", testMessage);
+        LOGGER.info("Test message sent to /app/chat.sendMsg: " + testMessage);
     }
 }

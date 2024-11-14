@@ -13,10 +13,16 @@ import java.time.LocalDateTime;
 public class ChatController {
     @MessageMapping("/chat.sendMsg")
     @SendTo("/topic/public")
-    public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
+    public ChatMessage sendMessage(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+        // Set the sender from the session if available
+        String sender = (String) headerAccessor.getSessionAttributes().get("username");
+        if (sender != null && chatMessage.getSender() == null) {
+            chatMessage.setSender(sender);
+        }
         chatMessage.setSentAt(LocalDateTime.now());
         return chatMessage;
     }
+
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor)  {
