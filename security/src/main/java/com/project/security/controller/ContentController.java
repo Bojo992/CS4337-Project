@@ -1,22 +1,22 @@
 package com.project.security.controller;
 
 import com.project.security.model.AuthRequest;
+import com.project.security.model.JwtCheckResponse;
 import com.project.security.model.JwtRefreshReqest;
 import com.project.security.model.JwtResponseDTO;
 import com.project.security.service.JwtService;
 import com.project.security.service.MyUserDetailService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
+@CrossOrigin
 public class ContentController {
 
     MyUserDetailService myUserDetailService;
@@ -54,5 +54,10 @@ public class ContentController {
     @PostMapping("/refreshJwt")
     public JwtResponseDTO refreshJwt(@RequestBody JwtRefreshReqest authRequest) {
          return jwtService.refresh(authRequest.getToken());
+    }
+
+    @PostMapping("/checkJwtOutside")
+    public JwtCheckResponse checkJwt(@RequestBody JwtRefreshReqest authRequest) {
+        return jwtService.checkJwt(authRequest);
     }
 }

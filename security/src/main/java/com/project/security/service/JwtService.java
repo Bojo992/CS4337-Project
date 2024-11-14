@@ -1,6 +1,8 @@
 package com.project.security.service;
 
+import com.project.security.model.JwtCheckResponse;
 import com.project.security.model.JwtRefresh;
+import com.project.security.model.JwtRefreshReqest;
 import com.project.security.model.JwtResponseDTO;
 import com.project.security.repository.JwtRefreshRepository;
 import io.jsonwebtoken.Claims;
@@ -127,6 +129,25 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    public JwtCheckResponse checkJwt(JwtRefreshReqest authRequest) {
+        var jwtClaims = extractAllClaims(authRequest.getToken());
+        var username = jwtClaims.get("sub");
+
+        UserDetails userDetails = myUserDetailService.loadUserByUsername(username.toString());
+
+        var isValid = validateToken(authRequest.getToken(), userDetails);
+
+        return JwtCheckResponse.builder()
+                                .isCorrect(isValid)
+                                .username(isValid ? username.toString() : "")
+                                .build();
+    }
+
     // Extract all claims from the token
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
@@ -138,10 +159,5 @@ public class JwtService {
 
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
-    }
-
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }

@@ -10,6 +10,7 @@ var connectingElement = document.querySelector('.connecting');
 
 var stompClient = null;
 var username = null;
+var pass = null;
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
