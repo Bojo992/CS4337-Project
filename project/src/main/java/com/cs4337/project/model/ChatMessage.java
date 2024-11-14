@@ -39,4 +39,8 @@ public class ChatMessage {
      * Currently unused. Indicator on whether message is seen.
      */
     private boolean isSeen;
+    /**
+     * Currently unused. URL of attached media.
+     */
+    private String room;
 }

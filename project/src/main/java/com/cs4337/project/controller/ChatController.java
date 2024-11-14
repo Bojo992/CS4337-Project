@@ -1,10 +1,13 @@
 package com.cs4337.project.controller;
 
 import com.cs4337.project.model.ChatMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
@@ -15,6 +18,9 @@ import java.time.LocalDateTime;
  */
 @Controller
 public class ChatController {
+    @Autowired
+    private SimpMessageSendingOperations simpMessagingTemplate;
+
     /***
      * This handles sending a user's chat message, and processing certain values such
      * as the timestamp, before sending it off to the server.
@@ -38,6 +44,13 @@ public class ChatController {
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor)  {
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+        return chatMessage;
+    }
+
+    @MessageMapping("/chat.privateMessage")
+    public ChatMessage pmUser(@Payload ChatMessage chatMessage)  {
+        chatMessage.setSentAt(LocalDateTime.now());
+        simpMessagingTemplate.convertAndSendToUser(chatMessage.getRoom(),"room/",chatMessage);
         return chatMessage;
     }
 }
