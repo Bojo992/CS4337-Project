@@ -9,14 +9,31 @@ import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
 
+/***
+ * The controller class for chat rooms, received from stompJS calls. The mappings are stored here.
+ * @author royfl
+ */
 @Controller
 public class ChatController {
+    /***
+     * This handles sending a user's chat message, and processing certain values such
+     * as the timestamp, before sending it off to the server.
+     * @param chatMessage the chat message as sent by the user.
+     * @return the formatted chat message
+     */
     @MessageMapping("/chat.sendMsg")
     @SendTo("/topic/public")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
         chatMessage.setSentAt(LocalDateTime.now());
         return chatMessage;
     }
+    /***
+     * This handles sending a "user joined" message into the public topic. It pulls the username from the headerAccessor
+     * and formats and sends the message once the frontend
+     * @param chatMessage the chat message as sent by the user.
+     * @param headerAccessor the Websocket headers, used to get the username
+     * @return the formatted join message
+     */
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor)  {
