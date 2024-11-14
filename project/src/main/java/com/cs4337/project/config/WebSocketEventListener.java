@@ -14,7 +14,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @RequiredArgsConstructor
 @Slf4j
 public class WebSocketEventListener {
-    private final SimpMessageSendingOperations messageTemplate;
+    private SimpMessageSendingOperations messageTemplate;
 
     /***
      * This sends a message to other users to notify when a user has disconnected from the public chatroom.
