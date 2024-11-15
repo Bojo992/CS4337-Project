@@ -198,6 +198,6 @@ fetch('http://localhost:8081'+'/checkJwtOutside', {
    .catch(error => {
        console.error('Error during login:', error);
    });
-    
+
     event.preventDefault();
 });
