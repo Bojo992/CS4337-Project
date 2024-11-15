@@ -1,0 +1,40 @@
+services:
+  # For local hosting only, will be removed in AWS deployment
+  db:
+    image: mysql:latest
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: chat_app_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+      MYSQL_TCP_PORT: 3308
+
+    ports:
+      - "3308:3308"
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      interval: 5s
+      retries: 5
+      timeout: 2s
+    volumes:
+      - './src/main/resources:/docker-entrypoint-initdb.d'
+    networks:
+      - net
+
+
+  app:
+    build: .
+    container_name: spring-boot-app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - net
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3308/chat_app_db
+networks:
+  net:
+    driver: bridge
