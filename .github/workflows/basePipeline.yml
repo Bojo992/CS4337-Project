@@ -22,13 +22,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
-      - name: Grant Permissions to gradle
+      - name: Grant Permissions to gradlew
         run:
           cd project;
-          chmod +x gradle;
+          chmod +x gradlew;
 
       - name: Build with Gradle Wrapper
-        run: cd project; ./gradle build -x test;
+        run: cd project; ./gradlew build -x test;
 
   test:
     name: GradleTest
@@ -44,12 +44,12 @@ jobs:
           java-version: '23.0.0+37'
           distribution: 'temurin'
 
-      - name: Grant Permissions to gradle
+      - name: Grant Permissions to gradlew
         run:
           cd project;
-          chmod +x gradle;
+          chmod +x gradlew;
 
       - name: Test
         run:
           cd project;
-          ./gradle test --tests "*";
+          ./gradlew test --test "*";
