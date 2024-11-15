@@ -11,6 +11,7 @@ var connectingElement = document.querySelector('.connecting');
 var stompClient = null;
 var username = null;
 var pass = null;
+var registerCheck = null;
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -20,7 +21,27 @@ var colors = [
 function connect(event) {
     username = document.querySelector('#name').value.trim();
     pass = document.querySelector('#pass').value.trim();
-
+    registerCheck = document.querySelector('#register');
+    if (registerCheck.checked) {
+       let email = prompt("Insert your email to register");
+       fetch('http://localhost:8081'+'/register', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ username: username, password: pass, email: email })
+          })
+          .then(response => {
+              if (response.ok) {
+                  return response.json();
+              } else {
+                  throw new Error('registration failed');
+              }
+          })
+          .catch(error => {
+              console.error('Error during registration:', error);
+          });
+    }
     if(username) {
        fetch('http://localhost:8081'+'/login', {
                    method: 'POST',
