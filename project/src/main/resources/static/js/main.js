@@ -58,6 +58,8 @@ function connect(event) {
                    }
                })
                .then(data => {
+                    localStorage.setItem("Refresh", data.Refresh);
+                    localStorage.setItem("jwt", data.jwt);
                    // If login is successful, proceed to connect to WebSocket
                    usernamePage.classList.add('hidden');
                    chatPage.classList.remove('hidden');
@@ -78,7 +80,7 @@ function connect(event) {
 function onConnected() {
     // Subscribe to the Public Topic
     stompClient.subscribe('/topic/public', onMessageReceived);
-
+    //stompClient.subscribe('/user/'+username+'/private', onPMReceived)
     // Tell your username to the server
     stompClient.send("/app/chat.addUser",
         {},
