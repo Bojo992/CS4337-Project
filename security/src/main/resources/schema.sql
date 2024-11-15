@@ -17,3 +17,14 @@ CREATE TABLE IF NOT EXISTS users (
                                  status_message VARCHAR(255),
                                  email VARCHAR(255)
     );
+
+CREATE TABLE IF NOT EXISTS chat (
+                                 chat_id INT,
+                                 user_id INT,
+                                 is_admin BIT
+    );
+
+CREATE TABLE IF NOT EXISTS chat_info (
+                                 chat_id INT,
+                                 chat_name VARCHAR(255)
+    );

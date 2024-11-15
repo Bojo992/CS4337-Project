@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.cs4337.project"},{"l":"com.cs4337.project.config"},{"l":"com.cs4337.project.controller"},{"l":"com.cs4337.project.model"},{"l":"com.cs4337.project.repository"},{"l":"com.cs4337.project.service"},{"l":"com.cs4337.project.util"}];updateSearchResults();

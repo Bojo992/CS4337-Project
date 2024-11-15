@@ -2,7 +2,6 @@ package com.project.security.config;
 
 import com.project.security.component.JwtAuthFilter;
 import com.project.security.service.MyUserDetailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -38,7 +37,7 @@ public class SecurityConfig {
         return httpSecurity.authorizeHttpRequests(
                         authorize -> {
                             authorize.requestMatchers("/css/**", "/js/**", "/images/**").permitAll();
-                            authorize.requestMatchers("/login", "/error/**", "/logout","/register", "/refreshJwt").permitAll();
+                            authorize.requestMatchers("/login", "/logout","/register", "/refreshJwt", "/checkJwtOutside").permitAll();
                             authorize.anyRequest().authenticated();
                         }
                 )
