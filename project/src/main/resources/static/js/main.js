@@ -166,3 +166,38 @@ function getAvatarColor(messageSender) {
 
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
+document.addEventListener("DOMContentLoaded", (event) => {
+fetch('http://localhost:8081'+'/checkJwtOutside', {
+       method: 'POST',
+       headers: {
+           'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({ token: localStorage.getItem("jwt") })
+   })
+   .then(response => {
+       if (response.ok) {
+           return response.json();
+       } else {
+           throw new Error('Token invalid. Please log in.');
+       }
+   })
+   .then(data => {
+        if (data.isCorrect) {
+            username = data.username;
+           // If login is successful, proceed to connect to WebSocket
+           usernamePage.classList.add('hidden');
+           chatPage.classList.remove('hidden');
+
+           const socket = new SockJS('/ws');
+           stompClient = Stomp.over(socket);
+
+           stompClient.connect({}, onConnected, onError);
+        }
+
+   })
+   .catch(error => {
+       console.error('Error during login:', error);
+   });
+    
+    event.preventDefault();
+});
