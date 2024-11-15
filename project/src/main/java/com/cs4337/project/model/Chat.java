@@ -21,5 +21,6 @@ public class Chat {
     @Id
     private Integer chatId;
     private Integer userId;
+    @Builder.Default
     private boolean isAdmin = false;
 }
