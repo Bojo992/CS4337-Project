@@ -39,7 +39,7 @@ public class ChatRESTController {
         return chatService.addUserToGroupChat(request);
     }
 
-    @GetMapping("/getAllChatsForUser")
+    @PostMapping("/getAllChatsForUser")
     public Map<String, Object> getAllChatsForUser(@RequestBody Map<String, Integer> request) {
         return chatService.getAllChatsForUser(request.get("userId"));
     }

@@ -2,6 +2,8 @@
 
 var usernamePage = document.querySelector('#username-page');
 var chatPage = document.querySelector('#chat-page');
+var chatListPage = document.querySelector('#chat-list');
+var usersChatList = document.querySelector('#usersChatList');
 var usernameForm = document.querySelector('#usernameForm');
 var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
@@ -60,20 +62,90 @@ function connect(event) {
                .then(data => {
                     localStorage.setItem("Refresh", data.Refresh);
                     localStorage.setItem("jwt", data.jwt);
+
+                    console.log(localStorage.getItem("jwt"), "bojo test")
+
                    // If login is successful, proceed to connect to WebSocket
                    usernamePage.classList.add('hidden');
-                   chatPage.classList.remove('hidden');
+                   chatListPage.classList.remove('hidden');
 
-                   const socket = new SockJS('/ws');
-                   stompClient = Stomp.over(socket);
-
-                   stompClient.connect({}, onConnected, onError);
+                   populateList();
                })
                .catch(error => {
                    console.error('Error during login:', error);
                });
     }
     event.preventDefault();
+}
+
+function populateList() {
+    var token = localStorage.getItem("jwt")
+    var arrayToken = token.split('.')
+    var tokenPayload = JSON.parse(atob(arrayToken[1]))
+    var username = tokenPayload?.sub
+
+    console.log(username, "bojo test")
+
+    fetch('http://localhost:8080'+'/getUseId', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: username})
+    }).then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('failed to get userId');
+        }
+    }).then(data => {
+        console.log("populateList bojo")
+        getUserChats(data)
+    })
+}
+
+function getUserChats(data) {
+    fetch('http://localhost:8080'+'/getAllChatsForUser', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: data.userId})
+    }).then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Failed to get chats for user');
+        }
+    }).then(data => {
+        console.log("getUserChats bojo")
+        createList(data);
+    })
+}
+
+function createList(data) {
+    data.chats.forEach((item) => {
+        console.log(item.chatId, "chat id bojo")
+
+        let btn = document.createElement("button")
+        btn.innerText = item.chatName;
+        btn.id = item.chatId
+        btn.addEventListener('click', addWebSocket)
+
+        let li = document.createElement("li");
+        li.appendChild(btn)
+        usersChatList.appendChild(li);
+    });
+}
+
+function addWebSocket() {
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    chatListPage.classList.add('hidden')
+    chatPage.classList.remove('hidden')
+
+    stompClient.connect({}, onConnected, onError);
 }
 
 
@@ -172,7 +244,7 @@ fetch('http://localhost:8081'+'/checkJwtOutside', {
        headers: {
            'Content-Type': 'application/json'
        },
-       body: JSON.stringify({ token: localStorage.getItem("jwt") })
+       body: JSON.stringify({ token: String(localStorage.getItem("jwt")) })
    })
    .then(response => {
        if (response.ok) {

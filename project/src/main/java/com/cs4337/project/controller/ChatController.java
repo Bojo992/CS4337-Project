@@ -28,7 +28,7 @@ public class ChatController {
      * @return the formatted chat message
      */
     @MessageMapping("/chat.sendMsg")
-    @SendTo("/topic/public")
+    @SendTo("/topic/{id}")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
         chatMessage.setSentAt(LocalDateTime.now());
         return chatMessage;
