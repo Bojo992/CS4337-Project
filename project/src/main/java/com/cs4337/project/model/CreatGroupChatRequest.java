@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/***
+ * The body for creating a group chat. For one-on-one chats, see: {@link com.cs4337.project.model.CreatPersonalChatRequest}
+ * Takes a title, and a list of userIds.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

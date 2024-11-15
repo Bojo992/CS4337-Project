@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/***
+ * The user model, built off the database schema.
+ */
 @Data
 @Entity
 @AllArgsConstructor

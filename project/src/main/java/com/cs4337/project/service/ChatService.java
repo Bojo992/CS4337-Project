@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/***
+ * The service class for managing users and chats. Manages functions more difficult to achieve with websockets, such as group chat creation and allocation.
+ * Controlled by: {@link com.cs4337.project.controller.ChatRESTController}
+ */
 @Service
 public class ChatService {
     private final ChatRepository chatRepository;

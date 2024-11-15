@@ -1,6 +1,8 @@
 # Chat for UL Students
 A WhatsApp clone targeted towards UL Students, using Spring Boot and JWT.
 
+[Project Tracking (Trello)](https://trello.com/b/2siErWSi/cs4337-group7)
+
 ## Services
 The planned services are:
 - DB Service
@@ -35,7 +37,7 @@ docker build -t cs4337-chatservice .
 docker-compose up
 ```
 
-The chat service should now be accessible via [localhost:8080](localhost:8080).
+The chat service should now be accessible via [localhost:8080](localhost:8080) on your browser.
 
 ### Security/Auth Service
 1. Build the Gradle project in the `security` directory with: 
@@ -51,7 +53,7 @@ docker build -t security_image .
 docker-compose up
 ```
 
-The security service should now be accessible via [localhost:8081](localhost:8081).
+The security service should now be accessible via pinging [localhost:8081](localhost:8081) on postman or through the chat service.
 
 ## Running
 
@@ -139,6 +141,6 @@ Requires a bearer token of the user's jwt. Deletes this user from the security d
 -  Feature 6: Database service
     - Assigned to Blake
 -  Testing/Quality Assurance
-    - Assigned to: Adam,Boris
+    - Assigned to: Adam (Chat Service),Boris (Security Service)
 -  Documentation
     - Assigned to: Roy

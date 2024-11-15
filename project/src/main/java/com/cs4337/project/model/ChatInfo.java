@@ -8,7 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+/***
+ * Information about the chatroom. Includes the generated Id and a name.
+ * for how chatrooms are connected to the user, see: {@link com.cs4337.project.model.Chat}
+ * */
 @Data
 @Entity
 @AllArgsConstructor
