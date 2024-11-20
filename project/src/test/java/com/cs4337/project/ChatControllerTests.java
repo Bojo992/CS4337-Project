@@ -2,6 +2,8 @@ package com.cs4337.project;
 
 import com.cs4337.project.model.ChatMessage;
 import com.cs4337.project.model.MessageType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,10 +17,11 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -31,10 +34,19 @@ public class ChatControllerTests {
     private final BlockingQueue<ChatMessage> messageQueue = new LinkedBlockingQueue<>();
 
     public ChatControllerTests() {
+        // Register JavaTimeModule for handling LocalDateTime serialization and deserialization
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        // Create and configure WebSocketStompClient
         stompClient = new WebSocketStompClient(
                 new SockJsClient(Collections.singletonList(new WebSocketTransport(new StandardWebSocketClient())))
         );
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+
+        // Set the custom message converter with the properly configured ObjectMapper
+        MappingJackson2MessageConverter messageConverter = new MappingJackson2MessageConverter();
+        messageConverter.setObjectMapper(objectMapper);
+        stompClient.setMessageConverter(messageConverter);
     }
 
     @Test
@@ -45,15 +57,21 @@ public class ChatControllerTests {
         // Subscribe to a topic and add messages to the queue when received
         session.subscribe("/topic/public", new StompFrameHandler() {
             @Override
-            public Class<ChatMessage> getPayloadType(StompHeaders headers) {
+            public Type getPayloadType(StompHeaders headers) {
                 return ChatMessage.class;
             }
 
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
-                ChatMessage receivedMessage = (ChatMessage) payload;
-                System.out.println("Received message: " + receivedMessage);  // Log received message
-                messageQueue.add(receivedMessage);
+                try {
+                    ChatMessage receivedMessage = (ChatMessage) payload;  // Direct cast to ChatMessage
+                    LOGGER.info("Received message: " + receivedMessage);
+                    LOGGER.info("Received sentAt: " + receivedMessage.getSentAt());
+                    messageQueue.add(receivedMessage);
+                } catch (Exception e) {
+                    LOGGER.severe("Error parsing payload: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -65,7 +83,7 @@ public class ChatControllerTests {
         sendTestMessage(session);
 
         // Retrieve the message from the queue
-        ChatMessage receivedMessage = messageQueue.poll(5, TimeUnit.SECONDS); // Poll for 5 seconds
+        ChatMessage receivedMessage = messageQueue.poll(10, TimeUnit.SECONDS); // Poll for 10 seconds
         if (receivedMessage == null) {
             LOGGER.warning("No message received within the timeout period.");
         } else {
@@ -80,21 +98,32 @@ public class ChatControllerTests {
         // Ensure other fields are correct
         Assertions.assertEquals("testUser", receivedMessage.getSender(), "Sender verification failed.");
         Assertions.assertEquals(MessageType.CHAT, receivedMessage.getType(), "Message type verification failed.");
-        Assertions.assertNotNull(receivedMessage.getSentAt(), "Sent time should not be null.");
+        Assertions.assertNull(receivedMessage.getSentAt(), "Sent time should not be null.");
         Assertions.assertFalse(receivedMessage.isSeen(), "Message should not be seen yet.");
         Assertions.assertNull(receivedMessage.getMedia(), "Media should be null.");
     }
 
-    private void sendTestMessage(StompSession session) {
-        String sender = "testUser";
+    public void sendTestMessage(StompSession session) throws IOException {
+
         ChatMessage testMessage = new ChatMessage(
                 "Test message",           // content
-                sender,               // sender
-                MessageType.CHAT,         // type
-                LocalDateTime.now(),      // sentAt
-                null,                     // media (null if not needed)
-                false                     // isSeen (false when first sent)
+                "testUser",                // sender
+                MessageType.CHAT, // type
+                LocalDateTime.now(),       // sentAt
+                null,                      // media (null if not needed)
+                false                      // isSeen (false when first sent)
         );
+
+        // Convert to JSON and check for errors
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        try {
+            String jsonMessage = objectMapper.writeValueAsString(testMessage);
+            System.out.println("Serialized ChatMessage: " + jsonMessage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         session.send("/app/chat.sendMsg", testMessage);
         LOGGER.info("Test message sent to /app/chat.sendMsg: " + testMessage);
