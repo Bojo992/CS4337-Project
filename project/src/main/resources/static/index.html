@@ -19,10 +19,21 @@
                 <input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />
             </div>
             <div class="form-group">
+                <input type="password" id="pass" placeholder="Username" autocomplete="off" class="form-control" />
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="register" name="register" value="true" class="accent username-submit"/>
+                <label>Registering a new account?</label>
+            </div>
+            <div class="form-group">
                 <button type="submit" class="accent username-submit">Start Chatting</button>
             </div>
         </form>
     </div>
+</div>
+
+<div id="chat-list" class="hidden">
+    <ul id="usersChatList"></ul>
 </div>
 
 <div id="chat-page" class="hidden">
