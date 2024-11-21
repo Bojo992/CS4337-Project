@@ -23,6 +23,7 @@ The planned services are:
 - JUnit for unit tests.
 
 ## Building
+1. You would need to run 'docker network create net' before running other compose files
 ### Chat Service
 1. Build the Gradle project in the `project` directory with: 
 ```bash
@@ -90,7 +91,7 @@ Registers the user. Returns a success message. Called by chat service if you tic
 ```json
 {
     "username": "cooluser123",
-    "password": "totallysecure",
+    "password": "totallysecure"
 }
 ```
 Logs the user in, returning a JWT and refresh token. Called when logging in in chat service, and then stored in local storage. Returns 403 if invalid.
@@ -104,7 +105,7 @@ Logs the user in, returning a JWT and refresh token. Called when logging in in c
 - `/refreshJwt`
 ```json
 {
-    "token": "3556498",
+    "token": "3556498"
 }
 ```
 Using the refresh token from login, sends a new jwt. Returns 403 if invalid
@@ -112,7 +113,7 @@ Using the refresh token from login, sends a new jwt. Returns 403 if invalid
 - `/checkJwtOutside`
 ```json
 {
-    "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IiwiaWF0IjoxNzMxNjc1OTEwLCJleHAiOjE3MzE2Nzc3MTB9.uNDPocwOZsj2xfNAI1RSILNWM7tVmwhHD6hqbqIRtvs",
+    "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IiwiaWF0IjoxNzMxNjc1OTEwLCJleHAiOjE3MzE2Nzc3MTB9.uNDPocwOZsj2xfNAI1RSILNWM7tVmwhHD6hqbqIRtvs"
 }
 ```
 Using the jwt, receives the validity of the token `isCorrect` and the ``username`` of the user the token is for. Used by chat service to save login.
@@ -122,7 +123,7 @@ Using the jwt, receives the validity of the token `isCorrect` and the ``username
 - `/deleteUser`
 ```json
 {
-    "username": "cooluser123",
+    "username": "cooluser123"
 }
 ```
 Requires a bearer token of the user's jwt. Deletes this user from the security database. Returns 403 if invalid.
