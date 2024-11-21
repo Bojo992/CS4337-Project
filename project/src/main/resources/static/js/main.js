@@ -119,7 +119,7 @@ function getUserChats(data) {
         }
     }).then(data => {
         console.log("getUserChats bojo")
-        createList(data);
+       // createList(data);
     })
 }
 
