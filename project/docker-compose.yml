@@ -32,7 +32,7 @@ services:
     ports:
       - "9000:9000"
     environment:
-      KAFKA_BROKERCONNECT: "kafka1:19091"
+      KAFKA_BROKERCONNECT: "kafka:9092"
     depends_on:
       - kafka
     networks:
