@@ -6,6 +6,8 @@ services:
     container_name: zookeeper
     ports:
       - "2181:2181"
+    networks:
+      - net
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -17,6 +19,8 @@ services:
     container_name: kafka
     ports:
       - "9092:9092"
+    networks:
+      - net
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -45,6 +49,8 @@ services:
 
   chat:
       image: cs4337-chatservice
+      build:
+          context: .
       container_name: chat
       networks:
         - net
@@ -54,7 +60,7 @@ services:
         - kafka
         - zookeeper
       environment:
-          SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+          SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092,
 networks:
   net:
     external: true
