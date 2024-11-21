@@ -57,4 +57,4 @@ services:
           SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 networks:
   net:
-    driver: bridge
+    external: true
