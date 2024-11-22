@@ -29,7 +29,7 @@ public class ChatMessage {
     /**
      * The timestamp of the message
      */
-    private LocalDateTime sentAt;
+    private String sentAt;
     /**
      * Currently unused. URL of attached media.
      */

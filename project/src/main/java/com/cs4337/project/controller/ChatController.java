@@ -44,7 +44,7 @@ public class ChatController {
     @MessageMapping("/chat.sendMsg")
     @SendTo("/topic/{id}")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
-        chatMessage.setSentAt(LocalDateTime.now());
+        chatMessage.setSentAt(LocalDateTime.now().toString());
         kafkaProducerServices.sendMessage(chatMessage);
         return chatMessage;
     }
@@ -65,7 +65,7 @@ public class ChatController {
 
     @MessageMapping("/chat.privateMessage")
     public ChatMessage pmUser(@Payload ChatMessage chatMessage)  {
-        chatMessage.setSentAt(LocalDateTime.now());
+        chatMessage.setSentAt(LocalDateTime.now().toString());
         simpMessagingTemplate.convertAndSendToUser(chatMessage.getRoom(),"room/",chatMessage);
         return chatMessage;
     }

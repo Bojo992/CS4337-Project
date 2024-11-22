@@ -29,6 +29,22 @@ services:
     depends_on:
       - zookeeper
     restart: on-failure
+
+  kafka-2: #Second Broker
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka-2
+    ports:
+      - "9093:9093"
+    networks:
+      - net
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+    depends_on:
+      - zookeeper
+    restart: on-failure
   kafka-3: #Third Broker
     image: confluentinc/cp-kafka:latest
     container_name: kafka-3
@@ -44,21 +60,7 @@ services:
     depends_on:
       - zookeeper
     restart: on-failure
-  kafka-2: #Second Broker
-      image: confluentinc/cp-kafka:latest
-      container_name: kafka-2
-      ports:
-        - "9093:9093"
-      networks:
-        - net
-      environment:
-        KAFKA_BROKER_ID: 2
-        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9093
-        KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
-      depends_on:
-        - zookeeper
-      restart: on-failure
+
 
   kafdrop:
     image: obsidiandynamics/kafdrop
