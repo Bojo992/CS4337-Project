@@ -111,7 +111,8 @@ public class ChatControllerTests {
                 MessageType.CHAT, // type
                 LocalDateTime.now(),       // sentAt
                 null,                      // media (null if not needed)
-                false                      // isSeen (false when first sent)
+                false,                      // isSeen (false when first sent)
+                "public"
         );
 
         // Convert to JSON and check for errors
