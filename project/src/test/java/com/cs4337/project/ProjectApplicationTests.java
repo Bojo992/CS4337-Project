@@ -17,9 +17,9 @@ class ProjectApplicationTests {
 
 	// Define a MySQLContainer instance
 	@Container
-	static final MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:latest")
-			.withDatabaseName("securityDB")            // Set the database name
-			.withUsername("root")                // Set the username
+	static final MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0.28")
+			.withDatabaseName("randomTest")            // Set the database name
+			.withUsername("test")                // Set the username
 			.withPassword("1234")                    // Set the password
 			.withCopyFileToContainer(
 					MountableFile.forClasspathResource("schema.sql"), // Load schema from resources
