@@ -9,10 +9,9 @@ import java.time.LocalDateTime;
  *
  * @author royfl
  */
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 @Builder
 public class ChatMessage {
     /**
@@ -30,7 +29,7 @@ public class ChatMessage {
     /**
      * The timestamp of the message
      */
-    private LocalDateTime sentAt;
+    private String sentAt;
     /**
      * Currently unused. URL of attached media.
      */
