@@ -1,13 +1,102 @@
 name: cs4337-chatforstudents
 
 services:
+  zookeeper: #Zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - net
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: on-failure
+
+
+  kafka: #First Broker
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    networks:
+      - net
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    depends_on:
+      - zookeeper
+    restart: on-failure
+
+  kafka-2: #Second Broker
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka-2
+    ports:
+      - "9093:9093"
+    networks:
+      - net
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+    depends_on:
+      - zookeeper
+    restart: on-failure
+  kafka-3: #Third Broker
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka-3
+    ports:
+      - "9094:9094"
+    networks:
+      - net
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9094
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094
+    depends_on:
+      - zookeeper
+    restart: on-failure
+
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+    depends_on:
+      - kafka
+      - kafka-2
+      - kafka-3
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 200m
+
   chat:
       image: cs4337-chatservice
+      build:
+          context: .
       container_name: chat
       networks:
         - net
       ports:
         - "8080:8080"
+      depends_on:
+        - kafka
+        - kafka-2
+        - kafka-3
+        - zookeeper
+      environment:
+          SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092,kafka-2:9093,kafka-3:9094
 networks:
   net:
-    driver: bridge
+    external: true
