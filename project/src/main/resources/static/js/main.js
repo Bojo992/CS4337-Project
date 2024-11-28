@@ -70,12 +70,53 @@ function connect(event) {
                    chatListPage.classList.remove('hidden');
 
                    populateList();
+                   connectSSE();
                })
                .catch(error => {
                    console.error('Error during login:', error);
                });
     }
     event.preventDefault();
+}
+
+// SSE Connection for Notifications
+function connectSSE() {
+    const token = localStorage.getItem("jwt");
+    if (!token) {
+        console.error("No JWT token found for SSE connection");
+        return;
+    }
+
+    notificationSource = new EventSource(`http://localhost:8083/sse/notifications?token=${token}`);
+    
+    notificationSource.onmessage = function (event) {
+        console.log("SSE Notification Received:", event.data);
+        displayNotification(event.data);
+    };
+
+    notificationSource.onerror = function () {
+        console.error("Error with SSE connection. Attempting to reconnect...");
+        if (notificationSource) {
+            notificationSource.close();
+        }
+        setTimeout(connectSSE, 5000); // Retry connection
+    };
+}
+
+// Display SSE Notifications
+function displayNotification(data) {
+    const notification = JSON.parse(data);
+
+    var notificationElement = document.createElement('li');
+    notificationElement.classList.add('notification-message');
+    
+    var textElement = document.createElement('p');
+    var messageText = document.createTextNode(`${notification.title}: ${notification.body}`);
+    textElement.appendChild(messageText);
+
+    notificationElement.appendChild(textElement);
+    messageArea.appendChild(notificationElement);
+    messageArea.scrollTop = messageArea.scrollHeight;
 }
 
 function populateList() {
