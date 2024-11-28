@@ -9,6 +9,7 @@ var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
 var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
+var errorElement = document.querySelector('#error-text');
 
 var stompClient = null;
 var username = null;
@@ -55,27 +56,42 @@ function connect(event) {
                .then(response => {
                    if (response.ok) {
                        return response.json();
-                   } else {
+                   }
+                   else if (response.status = 403){
+                        errorElement.classList.remove('hidden');
+                        errorElement.textContent = response.json();
+                        throw new Error('Login failed, response 403');
+                   }
+                    else {
                        throw new Error('Login failed');
                    }
                })
                .then(data => {
                     localStorage.setItem("Refresh", data.Refresh);
                     localStorage.setItem("jwt", data.jwt);
+                    login();
 
-                    console.log(localStorage.getItem("jwt"), "bojo test")
-
-                   // If login is successful, proceed to connect to WebSocket
-                   usernamePage.classList.add('hidden');
-                   chatListPage.classList.remove('hidden');
-
-                   populateList();
                })
                .catch(error => {
                    console.error('Error during login:', error);
                });
     }
     event.preventDefault();
+}
+function login() {
+     console.log(localStorage.getItem("jwt"), "bojo test")
+
+       // If login is successful, proceed to connect to WebSocket
+       usernamePage.classList.add('hidden');
+       chatListPage.classList.remove('hidden');
+
+       populateList();
+       addWebSocket();
+}
+
+function loginOld() {
+    usernamePage.classList.add('hidden');
+    addWebSocket();
 }
 
 function populateList() {
@@ -100,7 +116,7 @@ function populateList() {
         }
     }).then(data => {
         console.log("populateList bojo")
-        getUserChats(data)
+       getChatMessages(data)
     })
 }
 
@@ -119,7 +135,27 @@ function getUserChats(data) {
         }
     }).then(data => {
         console.log("getUserChats bojo")
-       // createList(data);
+       createList(data);
+    })
+}
+
+function getChatMessages(data) {
+    fetch('http://localhost:8080'+'/api/chat', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        }).then(response => {
+        if (response.ok) {
+            return response.json();
+        }
+        else {
+            throw new Error('Failed to get chats for user');
+        }
+    }).then(data => {
+       console.log("getUserChats ROY" + data)
+      // createList(data);
+      data.forEach(msg => {renderMessage(msg)})
     })
 }
 
@@ -186,47 +222,49 @@ function sendMessage(event) {
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
+    renderMessage(message)
+}
 
+function renderMessage(messageToLoad) {
+    console.log(messageToLoad)
     var messageElement = document.createElement('li');
 
-    if(message.type === 'CONNECT') {
+    if(messageToLoad.type === 'CONNECT') {
         messageElement.classList.add('event-message');
-        message.content = message.sender + ' joined!';
-    } else if (message.type === 'DISCONNECT') {
+        messageToLoad.content = messageToLoad.sender + ' joined!';
+    } else if (messageToLoad.type === 'DISCONNECT') {
         messageElement.classList.add('event-message');
-        message.content = message.sender + ' left!';
+        messageToLoad.content = messageToLoad.sender + ' left!';
     } else {
         messageElement.classList.add('chat-message');
 
         var avatarElement = document.createElement('i');
-        var avatarText = document.createTextNode(message.sender[0]);
+        var avatarText = document.createTextNode(messageToLoad.sender[0]);
         avatarElement.appendChild(avatarText);
-        avatarElement.style['background-color'] = getAvatarColor(message.sender);
+        avatarElement.style['background-color'] = getAvatarColor(messageToLoad.sender);
 
         messageElement.appendChild(avatarElement);
 
         var usernameElement = document.createElement('span');
-        var usernameText = document.createTextNode(message.sender);
+        var usernameText = document.createTextNode(messageToLoad.sender);
         usernameElement.appendChild(usernameText);
         messageElement.appendChild(usernameElement);
         messageElement.appendChild(document.createElement('br'));
         var sentAtElement = document.createElement('span');
         sentAtElement.classList.add("timestamp")
-        var sentAtText = document.createTextNode(message.sentAt);
+        var sentAtText = document.createTextNode(messageToLoad.sentAt);
         sentAtElement.appendChild(sentAtText);
         messageElement.appendChild(sentAtElement);
     }
     var textElement = document.createElement('p');
-    var messageText = document.createTextNode(message.content);
+    var messageText = document.createTextNode(messageToLoad.content);
     textElement.appendChild(messageText);
 
     messageElement.appendChild(textElement);
 
     messageArea.appendChild(messageElement);
     messageArea.scrollTop = messageArea.scrollHeight;
-}
-
-
+   }
 function getAvatarColor(messageSender) {
     var hash = 0;
     for (var i = 0; i < messageSender.length; i++) {
@@ -257,13 +295,7 @@ fetch('http://localhost:8081'+'/checkJwtOutside', {
         if (data.isCorrect) {
             username = data.username;
            // If login is successful, proceed to connect to WebSocket
-           usernamePage.classList.add('hidden');
-           chatPage.classList.remove('hidden');
-
-           const socket = new SockJS('/ws');
-           stompClient = Stomp.over(socket);
-
-           stompClient.connect({}, onConnected, onError);
+           login();
         }
 
    })
