@@ -1,5 +1,7 @@
 package com.example.demo.model;
 
+import java.util.Objects;
+
 public class NotificationRequest {
     private String email;
     private String subject;
@@ -49,5 +51,20 @@ public class NotificationRequest {
                 ", message='" + message + '\'' +
                 '}';
     }
-}
 
+    // Equals and HashCode methods for comparison
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NotificationRequest that = (NotificationRequest) o;
+        return Objects.equals(email, that.email) &&
+               Objects.equals(subject, that.subject) &&
+               Objects.equals(message, that.message);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(email, subject, message);
+    }
+}

@@ -39,4 +39,3 @@ class KafkaConsumerServiceTest {
         verify(notificationService, times(1)).sendEmail(request);
     }
 }
-

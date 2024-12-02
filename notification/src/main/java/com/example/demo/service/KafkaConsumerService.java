@@ -67,6 +67,11 @@ public class KafkaConsumerService {
         }
     }
 
+    public List<SseEmitter> getEmitters() {
+        return emitters;
+    }
+    
+
     /**
      * Broadcast a message to all connected SSE clients
      */
