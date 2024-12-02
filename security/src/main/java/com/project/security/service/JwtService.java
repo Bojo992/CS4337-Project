@@ -18,6 +18,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -83,7 +84,7 @@ public class JwtService {
             return Map.of("error", ex.getMessage());
         }
 
-        var refreshToken = user.hashCode() + "";
+        var refreshToken = UUID.randomUUID().toString();
 
         var doesExistJwtRefresh = jwtRefreshRepository.findByRefreshToken(refreshToken);
 
@@ -135,17 +136,20 @@ public class JwtService {
     }
 
     public JwtCheckResponse checkJwt(JwtRefreshReqest authRequest) {
-        var jwtClaims = extractAllClaims(authRequest.getToken());
-        var username = jwtClaims.get("sub");
-
-        UserDetails userDetails = myUserDetailService.loadUserByUsername(username.toString());
-
-        var isValid = validateToken(authRequest.getToken(), userDetails);
-
-        return JwtCheckResponse.builder()
-                                .isCorrect(isValid)
-                                .username(isValid ? username.toString() : "")
-                                .build();
+        try {
+            Jwts.parser()
+                    .setSigningKey(SECRET)
+                    .parseClaimsJws(authRequest.getToken());
+            return JwtCheckResponse.builder()
+                    .isCorrect(true)
+                    .username(extractAllClaims(authRequest.getToken()).get("sub").toString())
+                    .build();
+        } catch (Exception ex) {
+            return JwtCheckResponse.builder()
+                    .isCorrect(false)
+                    .username("")
+                    .build();
+        }
     }
 
     // Extract all claims from the token
