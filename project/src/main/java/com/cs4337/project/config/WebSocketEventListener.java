@@ -31,7 +31,7 @@ public class WebSocketEventListener {
                     .type(MessageType.DISCONNECT)
                     .sender(username)
                     .build();
-            messageTemplate.convertAndSend("/topic/public", chatMessage);
+            messageTemplate.convertAndSend("/topic/{id}", chatMessage);
         }
     }
 }

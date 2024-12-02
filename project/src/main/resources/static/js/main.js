@@ -178,7 +178,6 @@ function addWebSocket() {
     const socket = new SockJS('/ws');
     stompClient = Stomp.over(socket);
 
-    chatListPage.classList.add('hidden')
     chatPage.classList.remove('hidden')
 
     stompClient.connect({}, onConnected, onError);
@@ -187,10 +186,10 @@ function addWebSocket() {
 
 function onConnected() {
     // Subscribe to the Public Topic
-    stompClient.subscribe('/topic/public', onMessageReceived);
+    stompSubscribe('public');
     //stompClient.subscribe('/user/'+username+'/private', onPMReceived)
     // Tell your username to the server
-    stompClient.send("/app/chat.addUser",
+    stompClient.send("/app/chat.addUser.public",
         {},
         JSON.stringify({sender: username, type: 'CONNECT'})
     )
@@ -204,19 +203,24 @@ function onError(error) {
     connectingElement.style.color = 'red';
 }
 
+function stompSubscribe(topic) {
+     stompClient.subscribe(`/topic/`+topic, onMessageReceived);
+}
 
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
+    topic = "public";
+    event.preventDefault();
     if(messageContent && stompClient) {
         var chatMessage = {
             sender: username,
             content: messageInput.value,
             type: 'CHAT'
         };
-        stompClient.send("/app/chat.sendMsg", {}, JSON.stringify(chatMessage));
+        stompClient.send(`/app/chat.`+topic, {}, JSON.stringify(chatMessage));
         messageInput.value = '';
     }
-    event.preventDefault();
+
 }
 
 

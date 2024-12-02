@@ -5,6 +5,7 @@ import com.cs4337.project.service.KafkaConsumerServices;
 import com.cs4337.project.service.KafkaProducerServices;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -45,7 +46,15 @@ public class ChatController {
     @SendTo("/topic/{id}")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
         chatMessage.setSentAt(LocalDateTime.now().toString());
-        kafkaProducerServices.sendMessage(chatMessage);
+        kafkaProducerServices.sendMessage(chatMessage,"chat-public");
+        return chatMessage;
+    }
+
+    @MessageMapping("/chat.{id}")
+    @SendTo("/topic/{id}")
+    public ChatMessage sendGroupMessage(@Payload ChatMessage chatMessage, @DestinationVariable String id) {
+        chatMessage.setSentAt(LocalDateTime.now().toString());
+        kafkaProducerServices.sendMessage(chatMessage, "chat-"+id);
         return chatMessage;
     }
     /***
@@ -55,16 +64,11 @@ public class ChatController {
      * @param headerAccessor the Websocket headers, used to get the username
      * @return the formatted join message
      */
-    @MessageMapping("/chat.addUser")
-    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor)  {
+    @MessageMapping("/chat.addUser.{id}")
+    @SendTo("/topic/{id}")
+    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, @DestinationVariable String id)  {
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
-        return chatMessage;
-    }
-
-    @MessageMapping("/chat.privateMessage")
-    public ChatMessage pmUser(@Payload ChatMessage chatMessage)  {
-        chatMessage.setSentAt(LocalDateTime.now().toString());
-        simpMessagingTemplate.convertAndSendToUser(chatMessage.getRoom(),"room/",chatMessage);
+        kafkaProducerServices.sendMessage(chatMessage, "chat-"+id);
         return chatMessage;
     }
 

@@ -15,8 +15,8 @@ public class KafkaProducerServices {
     public KafkaProducerServices(KafkaTemplate<String, ChatMessage> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
-    public void sendMessage(ChatMessage chatMessage) {
-        kafkaTemplate.send(TOPIC, chatMessage);
+    public void sendMessage(ChatMessage chatMessage, String topic) {
+        kafkaTemplate.send(topic, chatMessage);
         LOGGER.info("sENT message to Kafka: {}", chatMessage);
     }
 }
