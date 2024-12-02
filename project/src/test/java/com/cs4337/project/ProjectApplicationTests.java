@@ -1,32 +1,42 @@
 package com.cs4337.project;
 
+import com.cs4337.project.config.KafkaTopicConfig;
 import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
 
-import java.util.Arrays;
-
 @Testcontainers
+@RunWith(SpringRunner.class)
+@EmbeddedKafka(partitions = 1, topics = { "testTopic" })
 @SpringBootTest
 class ProjectApplicationTests {
 
-	// Define a MySQLContainer instance
+
 	@Container
 	static final MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0.28")
-			.withDatabaseName("randomTest")            // Set the database name
-			.withUsername("test")                // Set the username
-			.withPassword("1234")                    // Set the password
+			.withDatabaseName("randomTest")
+			.withUsername("test")
+			.withPassword("1234")
 			.withCopyFileToContainer(
-					MountableFile.forClasspathResource("schema.sql"), // Load schema from resources
-					"/docker-entrypoint-initdb.d/schema.sql")         // Place it in MySQL init directory
-	;
+					MountableFile.forClasspathResource("schema.sql"),
+					"/docker-entrypoint-initdb.d/schema.sql")
+			;
 
-	// Dynamically set Spring properties to use the Testcontainers instance
+	static {
+		mySQLContainer.withDatabaseName("test").start();
+	}
+
+
 	@DynamicPropertySource
 	static void configureTestProperties(DynamicPropertyRegistry registry) {
 		registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
@@ -35,7 +45,7 @@ class ProjectApplicationTests {
 		registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
 	}
 
-	// Test that the Spring Boot context loads with the containerized MySQL instance
+
 	@Test
 	void contextLoads() {
 		System.out.println("Test container is running with URL: " + mySQLContainer.getJdbcUrl());
