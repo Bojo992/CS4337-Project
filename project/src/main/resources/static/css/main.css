@@ -161,7 +161,12 @@ button.accent {
 #chat-page ul li p {
     margin: 0;
 }
-
+#error-text span
+{
+    background-color: red;
+    color: white;
+    text-align: center;
+}
 #chat-page .event-message {
     width: 100%;
     text-align: center;

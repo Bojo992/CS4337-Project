@@ -23,7 +23,7 @@ public class KafkaTopicConfig {
      */
     @Bean
     public NewTopic PublicChats() {
-        return TopicBuilder.name("public-chats").partitions(10).build();
+        return TopicBuilder.name("public-chats").partitions(3).build();
     }
 
 
