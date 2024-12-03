@@ -48,13 +48,6 @@ public class ChatController {
         kafkaProducerServices.sendMessage(chatMessage);
         return chatMessage;
     }
-    /***
-     * This handles sending a "user joined" message into the public topic. It pulls the username from the headerAccessor
-     * and formats and sends the message once the frontend
-     * @param chatMessage the chat message as sent by the user.
-     * @param headerAccessor the Websocket headers, used to get the username
-     * @return the formatted join message
-     */
     @MessageMapping("/chat.addUser")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor)  {
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
