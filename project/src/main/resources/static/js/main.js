@@ -139,8 +139,8 @@ function getUserChats(data) {
     })
 }
 
-function getChatMessages(data) {
-    fetch('http://localhost:8080'+'/api/chat', {
+function getChatMessages(data, string topic="public") {
+    fetch('http://localhost:8080'+'/api/chat/'+topic, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -209,7 +209,7 @@ function stompSubscribe(topic) {
 
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
-    topic = "public";
+    var topic = "public";
     event.preventDefault();
     if(messageContent && stompClient) {
         var chatMessage = {

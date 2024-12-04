@@ -28,7 +28,7 @@ public class KafkaConsumerServices {
         chatMessages.add(chatMessage);
         messagingTemplate.convertAndSend("/topic/public", chatMessage);
     }
-    public List<ChatMessage> getChatMessages() {
+    public List<ChatMessage> getChatMessages(String id) {
         return new ArrayList<>(chatMessages);
     }
 }
