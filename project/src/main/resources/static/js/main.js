@@ -116,7 +116,9 @@ function populateList() {
         }
     }).then(data => {
         console.log("populateList bojo")
-       getChatMessages(data)
+       getChatMessages(data,"public");
+       getUserChats(data);
+
     })
 }
 
@@ -139,7 +141,7 @@ function getUserChats(data) {
     })
 }
 
-function getChatMessages(data, string topic="public") {
+function getChatMessages(data, topic="public") {
     fetch('http://localhost:8080'+'/api/chat/'+topic, {
         method: 'GET',
         headers: {
