@@ -24,7 +24,7 @@ public class ChatRESTController {
         return chatService.createPersonalChat(request);
     }
 
-    @PostMapping("/creatGroupChat")
+    @PostMapping("/createGroupChat")
     public Map<String, Object> createGroupChat(@RequestBody CreatGroupChatRequest request) {
         return chatService.creatGroupChat(request);
     }

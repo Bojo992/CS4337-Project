@@ -25,3 +25,4 @@ public class KafkaProducerExample {
         System.out.println("Message sent to AWS Kafka!");
     }
 }
+
