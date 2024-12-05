@@ -22,13 +22,13 @@ public class KafkaConsumerServices {
     public KafkaConsumerServices(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
-    @KafkaListener(topics = TOPIC, groupId = "MyGroup")
+    @KafkaListener(topicPattern = "chat-.*", groupId = "MyGroup")
     public void handleMessage(ChatMessage chatMessage) {
         LOGGER.info("Received message from Kafka: {}", chatMessage);
         chatMessages.add(chatMessage);
         messagingTemplate.convertAndSend("/topic/public", chatMessage);
     }
-    public List<ChatMessage> getChatMessages() {
+    public List<ChatMessage> getChatMessages(String id) {
         return new ArrayList<>(chatMessages);
     }
 }

@@ -17,6 +17,10 @@ body {
     color: #333;
     background-color: #f4f4f4;
     height: 100%;
+    min-height: 100vh;
+    display: flex
+    justify-content: center
+    align-items: center
 }
 
 .clearfix:after {
@@ -122,27 +126,31 @@ button.accent {
 
 #chat-page {
     position: relative;
+    width: 1376px;
     height: 100%;
+}
+#chat-list {
+    flex: 30%;
+    min-width: 200px;
+    background-color: #fff;
+    border-right: 1px grey;
 }
 
 .chat-container {
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
     background-color: #fff;
     box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
     margin-top: 30px;
-    height: calc(100% - 60px);
-    max-height: 600px;
+    height: calc(100vh - 40px)
+    flex: 70%;
     position: relative;
 }
 
 #chat-page ul {
     list-style-type: none;
-    background-color: #FFF;
-    margin: 0;
+    background-color: #efdddf;
     overflow: auto;
     overflow-y: scroll;
+    margin: 10px 5px
     padding: 0 20px 0px 20px;
     height: calc(100% - 150px);
 }
@@ -181,6 +189,8 @@ button.accent {
 
 #chat-page .chat-message {
     padding-left: 68px;
+    background-color: #fff;
+    border-radius: 8px;
     position: relative;
 }
 
@@ -245,53 +255,4 @@ button.accent {
     position: absolute;
     top: 65px;
     width: 100%;
-}
-
-
-@media screen and (max-width: 730px) {
-
-    .chat-container {
-        margin-left: 10px;
-        margin-right: 10px;
-        margin-top: 10px;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .chat-container {
-        height: calc(100% - 30px);
-    }
-
-    .username-page-container {
-        width: auto;
-        margin-left: 15px;
-        margin-right: 15px;
-        padding: 25px;
-    }
-
-    #chat-page ul {
-        height: calc(100% - 120px);
-    }
-
-    #messageForm .input-group button {
-        width: 65px;
-    }
-
-    #messageForm .input-group input {
-        width: calc(100% - 70px);
-    }
-
-    .chat-header {
-        padding: 10px;
-    }
-
-    .connecting {
-        top: 60px;
-    }
-
-    .chat-header h2 {
-        font-size: 1.1em;
-    }
-
-
 }

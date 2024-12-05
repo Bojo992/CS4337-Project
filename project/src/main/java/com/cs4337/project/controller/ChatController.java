@@ -5,13 +5,12 @@ import com.cs4337.project.service.KafkaConsumerServices;
 import com.cs4337.project.service.KafkaProducerServices;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -45,24 +44,33 @@ public class ChatController {
     @SendTo("/topic/{id}")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
         chatMessage.setSentAt(LocalDateTime.now().toString());
-        kafkaProducerServices.sendMessage(chatMessage);
-        return chatMessage;
-    }
-    @MessageMapping("/chat.addUser")
-    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor)  {
-        headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+        kafkaProducerServices.sendMessage(chatMessage,"chat-public");
         return chatMessage;
     }
 
-    @MessageMapping("/chat.privateMessage")
-    public ChatMessage pmUser(@Payload ChatMessage chatMessage)  {
+    @MessageMapping("/chat.{id}")
+    public ChatMessage sendGroupMessage(@Payload ChatMessage chatMessage, @DestinationVariable String id) {
         chatMessage.setSentAt(LocalDateTime.now().toString());
-        simpMessagingTemplate.convertAndSendToUser(chatMessage.getRoom(),"room/",chatMessage);
+        kafkaProducerServices.sendMessage(chatMessage, "chat-"+id);
+        return chatMessage;
+    }
+    /***
+     * This handles sending a "user joined" message into the public topic. It pulls the username from the headerAccessor
+     * and formats and sends the message once the frontend
+     * @param chatMessage the chat message as sent by the user.
+     * @param headerAccessor the Websocket headers, used to get the username
+     * @return the formatted join message
+     */
+    @MessageMapping("/chat.addUser.{id}")
+    @SendTo("/topic/{id}")
+    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, @DestinationVariable String id)  {
+        headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+        kafkaProducerServices.sendMessage(chatMessage, "chat-"+id);
         return chatMessage;
     }
 
-    @GetMapping("/api/chat")
-    public List<ChatMessage> getChatMessages() {
-        return kafkaConsumerServices.getChatMessages();
+    @GetMapping("/api/chat/{id}")
+    public List<ChatMessage> getChatMessages(@DestinationVariable String id) {
+        return kafkaConsumerServices.getChatMessages(id);
     }
 }

@@ -15,7 +15,7 @@ var stompClient = null;
 var username = null;
 var pass = null;
 var registerCheck = null;
-
+var topic = "public"
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
@@ -116,7 +116,9 @@ function populateList() {
         }
     }).then(data => {
         console.log("populateList bojo")
-       getChatMessages(data)
+       getChatMessages(data,topic);
+       //getUserChats(data);
+
     })
 }
 
@@ -139,8 +141,8 @@ function getUserChats(data) {
     })
 }
 
-function getChatMessages(data) {
-    fetch('http://localhost:8080'+'/api/chat', {
+function getChatMessages(data, newtopic="public") {
+    fetch('http://localhost:8080'+'/api/chat/'+newtopic, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -166,7 +168,7 @@ function createList(data) {
         let btn = document.createElement("button")
         btn.innerText = item.chatName;
         btn.id = item.chatId
-        btn.addEventListener('click', addWebSocket)
+       // btn.addEventListener('click', addWebSocket)
 
         let li = document.createElement("li");
         li.appendChild(btn)
@@ -178,7 +180,6 @@ function addWebSocket() {
     const socket = new SockJS('/ws');
     stompClient = Stomp.over(socket);
 
-    chatListPage.classList.add('hidden')
     chatPage.classList.remove('hidden')
 
     stompClient.connect({}, onConnected, onError);
@@ -187,10 +188,10 @@ function addWebSocket() {
 
 function onConnected() {
     // Subscribe to the Public Topic
-    stompClient.subscribe('/topic/public', onMessageReceived);
+    stompSubscribe('public');
     //stompClient.subscribe('/user/'+username+'/private', onPMReceived)
     // Tell your username to the server
-    stompClient.send("/app/chat.addUser",
+    stompClient.send("/app/chat.addUser.public",
         {},
         JSON.stringify({sender: username, type: 'CONNECT'})
     )
@@ -204,19 +205,24 @@ function onError(error) {
     connectingElement.style.color = 'red';
 }
 
+function stompSubscribe(topic) {
+     stompClient.subscribe(`/topic/`+topic, onMessageReceived);
+}
 
 function sendMessage(event) {
+    event.preventDefault();
     var messageContent = messageInput.value.trim();
+    var topic = "public";
+
     if(messageContent && stompClient) {
         var chatMessage = {
             sender: username,
             content: messageInput.value,
             type: 'CHAT'
         };
-        stompClient.send("/app/chat.sendMsg", {}, JSON.stringify(chatMessage));
+        stompClient.send(`/app/chat.`+topic, {}, JSON.stringify(chatMessage));
         messageInput.value = '';
     }
-    event.preventDefault();
 }
 
 
@@ -295,7 +301,7 @@ fetch('http://localhost:8081'+'/checkJwtOutside', {
         if (data.isCorrect) {
             username = data.username;
            // If login is successful, proceed to connect to WebSocket
-           login();
+          login();
         }
 
    })
