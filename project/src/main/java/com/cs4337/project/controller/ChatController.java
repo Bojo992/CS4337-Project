@@ -49,7 +49,6 @@ public class ChatController {
     }
 
     @MessageMapping("/chat.{id}")
-    @SendTo("/topic/{id}")
     public ChatMessage sendGroupMessage(@Payload ChatMessage chatMessage, @DestinationVariable String id) {
         chatMessage.setSentAt(LocalDateTime.now().toString());
         kafkaProducerServices.sendMessage(chatMessage, "chat-"+id);
