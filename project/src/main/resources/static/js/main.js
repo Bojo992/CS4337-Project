@@ -231,3 +231,30 @@ function getAvatarColor(messageSender) {
 
 usernameForm.addEventListener('submit', connect, true);
 messageForm.addEventListener('submit', sendMessage, true);
+document.addEventListener("DOMContentLoaded", (event) => {
+fetch('http://localhost:8081/checkJwtOutside', {
+       method: 'POST',
+       headers: {
+           'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({ token: String(localStorage.getItem("jwt")) })
+   })
+   .then(response => {
+       if (response.ok) {
+           return response.json();
+       } else {
+           throw new Error('Token invalid. Please log in.');
+       }
+   })
+   .then(data => {
+        if (data.isCorrect) {
+            username = data.username;
+           login();
+        }
+   })
+   .catch(error => {
+       console.error('Error during login:', error);
+   });
+
+    event.preventDefault();
+});
