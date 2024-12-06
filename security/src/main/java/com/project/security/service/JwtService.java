@@ -27,7 +27,7 @@ public class JwtService {
 
     private MyUserDetailService myUserDetailService;
     ObjectMapper objectMapper = new ObjectMapper();
-    String baseUrl = "ec2-52-212-119-177.eu-west-1.compute.amazonaws.com:8082";
+    String baseUrl = "ec2-176-34-132-216.eu-west-1.compute.amazonaws.com:8082";
 
     public JwtService(MyUserDetailService myUserDetailService, Environment environment) {
         this.myUserDetailService = myUserDetailService;
