@@ -7,6 +7,7 @@ var usersChatList = document.querySelector('#usersChatList');
 var usernameForm = document.querySelector('#usernameForm');
 var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
+var imageInput = document.getElementById("imageInput");
 var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
 var errorElement = document.querySelector('#error-text');
@@ -20,6 +21,20 @@ var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
+
+let image = "";
+
+const reader = new FileReader;
+reader.onload = () => {
+    const dataURL = reader.result;
+    const base64 = reader.result.split(",").pop();
+    image = base64;
+}
+imageInput.onchange = () => {
+    reader.abort();
+    reader.readAsDataURL(imageInput.files[0]);
+}
+
 
 function connect(event) {
     username = document.querySelector('#name').value.trim();
@@ -204,21 +219,64 @@ function onError(error) {
     connectingElement.style.color = 'red';
 }
 
+async function sendMessage(event) {
+    event.preventDefault(); // Prevent form submission reload
 
-function sendMessage(event) {
     var messageContent = messageInput.value.trim();
-    if(messageContent && stompClient) {
-        var chatMessage = {
-            sender: username,
-            content: messageInput.value,
-            type: 'CHAT'
-        };
-        stompClient.send("/app/chat.sendMsg", {}, JSON.stringify(chatMessage));
-        messageInput.value = '';
+    let chatMessage = {
+        sender: username,
+        type: 'CHAT',
+        content: '',
+    };
+
+    if (imageInput.value) {
+        const imageFileId = await getImage(); // Await the image upload
+        if (imageFileId) {
+            chatMessage.media = imageFileId; // Attach the uploaded image ID
+        } else {
+            console.error("Image upload failed");
+            return; // Stop if the image upload fails
+        }
     }
-    event.preventDefault();
+
+    if (messageContent) {
+        chatMessage.content = messageContent; // Add message text if available
+    }
+
+    if (stompClient) {
+        stompClient.send("/app/chat.sendMsg", {}, JSON.stringify(chatMessage));
+    }
+
+    messageInput.value = ''; // Clear message input
+    imageInput.value = ''; // Clear image input
 }
 
+async function getImage() {
+    let body = { "base64Data": image };
+    const url = "http://localhost:8084/uploadObj";
+    let resultImgId = '';
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const responseData = await response.json(); // Parse the response JSON
+        resultImgId = responseData.filename; // Extract the filename
+    } catch (error) {
+        console.error("Error occurred during image upload:", error);
+    }
+
+    return resultImgId; // Return the uploaded image ID (or filename)
+}
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
@@ -262,9 +320,18 @@ function renderMessage(messageToLoad) {
 
     messageElement.appendChild(textElement);
 
+    var imgElement = document.createElement("img");
+    if (messageToLoad.media) {
+        var link = "https://test-cs4337.s3.eu-west-1.amazonaws.com/"
+        imgElement.src = link + messageToLoad["media"];
+        imgElement.ariaPlaceholder = "File id" + messageToLoad["media"];
+        imgElement.className = "mediaImage";
+    }
+
     messageArea.appendChild(messageElement);
+    messageArea.appendChild(imgElement);
     messageArea.scrollTop = messageArea.scrollHeight;
-   }
+}
 function getAvatarColor(messageSender) {
     var hash = 0;
     for (var i = 0; i < messageSender.length; i++) {
@@ -297,7 +364,6 @@ fetch('http://localhost:8081'+'/checkJwtOutside', {
            // If login is successful, proceed to connect to WebSocket
            login();
         }
-
    })
    .catch(error => {
        console.error('Error during login:', error);
