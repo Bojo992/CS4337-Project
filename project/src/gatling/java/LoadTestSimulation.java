@@ -7,24 +7,52 @@ import static io.gatling.javaapi.http.HttpDsl.*;
 
 public class LoadTestSimulation extends Simulation {
 
-    // Define HTTP protocol configuration
-    HttpProtocolBuilder httpProtocol = HttpDsl.http
-            .baseUrl("http://localhost:8080");
-            //.acceptHeader("application/json");
 
-    // Define the scenario
-    ScenarioBuilder scn = scenario("Basic Load Test")
+    HttpProtocolBuilder httpProtocol = HttpDsl.http
+            .baseUrl("http://localhost:8080")
+            .acceptHeader("application/json");
+
+
+    ScenarioBuilder sendMessageScenario = scenario("Send Message Test")
             .exec(
-                    http("Get Messages")
-                            .get("")
+                    http("Send Message")
+                            .post("/chat.sendMsg")
+                            .body(StringBody("{\"message\": \"Hello, world!\", \"sender\": \"user1\"}"))
+                            .asJson()
+                            .check(status().is(200))
+            )
+            .pause(1);
+
+
+    ScenarioBuilder addUserScenario = scenario("Add User Test")
+            .exec(
+                    http("Add User")
+                            .post("/chat.addUser")
+                            .body(StringBody("{\"username\": \"user1\"}"))
+                            .asJson()
+                            .check(status().is(200))
+            )
+            .pause(1);
+
+
+    ScenarioBuilder publicTopicScenario = scenario("Public Topic Test")
+            .exec(
+                    http("Access Public Topic")
+                            .get("/topic/public")
                             .check(status().is(200))
             )
             .pause(1);
 
     {
         setUp(
-                scn.injectOpen(
-                        rampUsers(1000).during(60)
+                sendMessageScenario.injectOpen(
+                        rampUsers(500).during(30)
+                ),
+                addUserScenario.injectOpen(
+                        rampUsers(300).during(30)
+                ),
+                publicTopicScenario.injectOpen(
+                        rampUsers(200).during(30)
                 )
         ).protocols(httpProtocol);
     }
