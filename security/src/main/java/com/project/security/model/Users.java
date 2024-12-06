@@ -10,13 +10,10 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Users {
-    @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Integer id;
     private String email;
     private String username;
