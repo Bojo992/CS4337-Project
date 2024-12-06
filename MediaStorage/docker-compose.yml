@@ -1,24 +1,11 @@
 version: '3.8'
 
 services:
-  localstack:
-    image: localstack/localstack
-    ports:
-      - '4566:4566' # LocalStack endpoint
-
-    environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    volumes:
-      - ./localstack-script:/etc/localstack/init/ready.d
-      - '/var/run/docker.sock:/var/run/docker.sock'
-
   media_service:
     build: .
-    container_name: app
+    container_name: mediaStorageApp
     env_file:
       - .env
-    depends_on:
-      - localstack
     networks:
       - net
     ports:
