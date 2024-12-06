@@ -8,6 +8,8 @@ services:
     depends_on:
       - kafka
       - mysql
+    env_file:
+    - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/notification_db
       SPRING_DATASOURCE_USERNAME: root
