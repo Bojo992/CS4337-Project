@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.4'
 	id 'io.spring.dependency-management' version '1.1.6'
+	id 'io.gatling.gradle' version '3.13.1'
 }
 
 group = 'com.cs4337'
@@ -15,10 +16,10 @@ java {
 
 repositories {
 	mavenCentral()
+	maven { url "https://repo.gatling.io/maven/" }
 }
 
 dependencies {
-	// Spring Boot dependencies
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter'
@@ -48,7 +49,9 @@ dependencies {
 	testImplementation "org.testcontainers:junit-jupiter:1.20.4"
 	testImplementation 'org.testcontainers:mysql:1.19.0'
 	testImplementation "org.springframework.kafka:spring-kafka-test:3.3.0"
+	testImplementation 'io.gatling.highcharts:gatling-charts-highcharts:3.13.1'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
 }
 
 test {
