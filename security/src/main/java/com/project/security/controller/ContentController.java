@@ -45,12 +45,6 @@ public class ContentController {
         return result;
     }
 
-    @DeleteMapping("/deleteUser")
-    public Map<String, Object> deleteUser(@RequestBody HashMap<String, String> request) {
-        var result = myUserDetailService.deleteUser(request);
-        return result;
-    }
-
     @PostMapping("/refreshJwt")
     public JwtResponseDTO refreshJwt(@RequestBody JwtRefreshReqest authRequest) {
          return jwtService.refresh(authRequest.getToken());

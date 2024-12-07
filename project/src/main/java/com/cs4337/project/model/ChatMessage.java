@@ -1,18 +1,16 @@
 package com.cs4337.project.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-
-import java.time.LocalDateTime;
 
 /***
  * The Chat Message class. Modelled after the message in the database schema.
  *
  * @author royfl
  */
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 @Builder
 public class ChatMessage {
     /**
@@ -24,13 +22,14 @@ public class ChatMessage {
      */
     private String sender;
     /**
-     * The type of message, usually 'CHAT'
+     * The message type
      */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private MessageType type;
     /**
      * The timestamp of the message
      */
-    private LocalDateTime sentAt;
+    private String sentAt;
     /**
      * Currently unused. URL of attached media.
      */

@@ -1,10 +1,7 @@
 package com.project.security.service;
 
-import com.project.security.model.JwtCheckResponse;
-import com.project.security.model.JwtRefresh;
-import com.project.security.model.JwtRefreshReqest;
-import com.project.security.model.JwtResponseDTO;
-import com.project.security.repository.JwtRefreshRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.security.model.*;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -14,25 +11,26 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 @Component
 public class JwtService {
     public static String SECRET;
 
-    private final Environment environment;
-    private JwtRefreshRepository jwtRefreshRepository;
     private MyUserDetailService myUserDetailService;
+    ObjectMapper objectMapper = new ObjectMapper();
+    String baseUrl = "ec2-176-34-132-216.eu-west-1.compute.amazonaws.com:8082";
 
-    public JwtService(JwtRefreshRepository jwtRefreshRepository, MyUserDetailService myUserDetailService, Environment environment) {
-        this.jwtRefreshRepository = jwtRefreshRepository;
+    public JwtService(MyUserDetailService myUserDetailService, Environment environment) {
         this.myUserDetailService = myUserDetailService;
-        this.environment = environment;
-
         this.SECRET = environment.getProperty("JWT_SECRET");
     }
 
@@ -48,21 +46,54 @@ public class JwtService {
     }
 
     public JwtResponseDTO refresh(String RefreshToken) {
-        var jwtRefresh = jwtRefreshRepository.findByRefreshToken(RefreshToken);
+        try {
+            HttpClient client = HttpClient.newHttpClient();
 
-        if (jwtRefresh.isPresent()) {
-            var username = extractUsername(jwtRefresh.get().getCurrentToken());
-            var newJwt = generateToken(username);
+            String param2 = URLEncoder.encode(RefreshToken, StandardCharsets.UTF_8);
 
-            var newJwtRefresh = JwtRefresh.builder().refreshToken(RefreshToken).currentToken(newJwt).build();
+            HttpRequest request3 = HttpRequest.newBuilder()
+                    .uri(new URI(baseUrl + "/jwt/get?token=" + param2))
+                    .GET()
+                    .build();
+            HttpResponse<String> response1 = client.send(request3, HttpResponse.BodyHandlers.ofString());
 
-            jwtRefreshRepository.delete(jwtRefresh.get());
-            jwtRefreshRepository.save(newJwtRefresh);
+            Optional<JwtRefresh> jwtRefresh = Optional.of(null);
 
-            return JwtResponseDTO.builder().token(newJwt).build();
+            if (response1.statusCode() == 200) {
+                var temp = objectMapper.readValue(response1.body(), JwtRefresh.class);
+
+                jwtRefresh = Optional.of(temp);
+            }
+
+            if (jwtRefresh.isPresent()) {
+                var username = extractUsername(jwtRefresh.get().getCurrentToken());
+                var newJwt = generateToken(username);
+
+                var newJwtRefresh = JwtRefresh.builder().refreshToken(RefreshToken).currentToken(newJwt).build();
+
+                var temp = jwtRefresh.get();
+
+                HttpRequest request2 = HttpRequest.newBuilder()
+                        .uri(new URI(baseUrl + "jwt/delete?token=" + temp.getRefreshToken()))
+                        .GET()
+                        .build();
+                client.send(request2, HttpResponse.BodyHandlers.ofString());
+
+                String jsonBody = "{\"refreshToken\": " + temp.getRefreshToken() + ", \"currentToken\": " + temp.getCurrentToken() + "}";
+                HttpRequest request1 = HttpRequest.newBuilder()
+                        .uri(new URI(baseUrl + "/jwt/save"))
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build();
+                client.send(request1, HttpResponse.BodyHandlers.ofString());
+
+
+                return JwtResponseDTO.builder().token(newJwt).build();
+            }
+
+            return JwtResponseDTO.builder().build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
-        return JwtResponseDTO.builder().build();
     }
 
     private String createToken(Map<String, Object> claims, String userName) {
@@ -76,34 +107,60 @@ public class JwtService {
     }
 
     private Map<String, Object> initialCreateToken(Map<String, Object> claims, String userName) {
-        UserDetails user;
         try {
-            user =  myUserDetailService.loadUserByUsername(userName);
+            HttpClient client = HttpClient.newHttpClient();
+
+            try {
+                myUserDetailService.loadUserByUsername(userName);
+            } catch (Exception ex) {
+                return Map.of("error", ex.getMessage());
+            }
+
+            var refreshToken = UUID.randomUUID().toString();
+
+            String param2 = URLEncoder.encode(refreshToken, StandardCharsets.UTF_8);
+
+            HttpRequest request2 = HttpRequest.newBuilder()
+                    .uri(new URI(baseUrl + "/jwt/get?token=" + param2))
+                    .GET()
+                    .build();
+            HttpResponse<String> response1 = client.send(request2, HttpResponse.BodyHandlers.ofString());
+
+            Optional<JwtRefresh> doesExistJwtRefresh = Optional.of(null);
+
+            if (response1.statusCode() == 200) {
+                var temp = objectMapper.readValue(response1.body(), JwtRefresh.class);
+
+                doesExistJwtRefresh = Optional.of(temp);
+            }
+
+            if (doesExistJwtRefresh.isPresent()) {
+                var refreshJwt = refresh(refreshToken);
+
+                return Map.of("Refresh", refreshToken, "jwt", refreshJwt.getToken());
+            } else {
+                var jwt = Jwts.builder()
+                        .setClaims(claims)
+                        .setSubject(userName)
+                        .setIssuedAt(new Date())
+                        .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // Token valid for 30 minutes
+                        .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                        .compact();
+                var jwtRefresh = JwtRefresh.builder().refreshToken(refreshToken).currentToken(jwt).build();
+
+
+                String jsonBody = "{\"refreshToken\": " + refreshToken + ", \"currentToken\": " + jwt + "}";
+                HttpRequest request1 = HttpRequest.newBuilder()
+                        .uri(new URI(baseUrl + "/jwt/save"))
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build();
+                client.send(request1, HttpResponse.BodyHandlers.ofString());
+
+                return Map.of("Refresh", jwtRefresh.getRefreshToken(), "jwt", jwt);
+            }
+
         } catch (Exception ex) {
-            return Map.of("error", ex.getMessage());
-        }
-
-        var refreshToken = user.hashCode() + "";
-
-        var doesExistJwtRefresh = jwtRefreshRepository.findByRefreshToken(refreshToken);
-
-        if (doesExistJwtRefresh.isPresent()) {
-            var refreshJwt = refresh(refreshToken);
-
-            return Map.of("Refresh", refreshToken, "jwt", refreshJwt.getToken());
-        } else {
-            var jwt = Jwts.builder()
-                    .setClaims(claims)
-                    .setSubject(userName)
-                    .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // Token valid for 30 minutes
-                    .signWith(getSignKey(), SignatureAlgorithm.HS256)
-                    .compact();
-            var jwtRefresh = JwtRefresh.builder().refreshToken(refreshToken).currentToken(jwt).build();
-
-            jwtRefreshRepository.save(jwtRefresh);
-
-            return Map.of("Refresh", jwtRefresh.getRefreshToken(), "jwt", jwt);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -135,17 +192,20 @@ public class JwtService {
     }
 
     public JwtCheckResponse checkJwt(JwtRefreshReqest authRequest) {
-        var jwtClaims = extractAllClaims(authRequest.getToken());
-        var username = jwtClaims.get("sub");
-
-        UserDetails userDetails = myUserDetailService.loadUserByUsername(username.toString());
-
-        var isValid = validateToken(authRequest.getToken(), userDetails);
-
-        return JwtCheckResponse.builder()
-                                .isCorrect(isValid)
-                                .username(isValid ? username.toString() : "")
-                                .build();
+        try {
+            Jwts.parser()
+                    .setSigningKey(SECRET)
+                    .parseClaimsJws(authRequest.getToken());
+            return JwtCheckResponse.builder()
+                    .isCorrect(true)
+                    .username(extractAllClaims(authRequest.getToken()).get("sub").toString())
+                    .build();
+        } catch (Exception ex) {
+            return JwtCheckResponse.builder()
+                    .isCorrect(false)
+                    .username("")
+                    .build();
+        }
     }
 
     // Extract all claims from the token
